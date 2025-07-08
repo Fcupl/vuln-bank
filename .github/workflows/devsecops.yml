@@ -135,11 +135,11 @@ jobs:
             if [ "$1" == "success" ]; then echo "✅"; else echo "❌"; fi
           }
 
-          STATUS_SUMMARY="📢 Pipeline DevSecOps Selesai%0A%0A"
-          STATUS_SUMMARY+="🔐 Secret Scanning (Gitleaks): $(emoji $SS_STATUS)%0A"
-          STATUS_SUMMARY+="📦 SCA (Snyk): $(emoji $SCA_STATUS)%0A"
-          STATUS_SUMMARY+="🔍 SAST (Semgrep): $(emoji $SAST_STATUS)%0A"
-          STATUS_SUMMARY+="🧪 DAST (ZAP): $(emoji $DAST_STATUS)%0A%0A"
+          STATUS_SUMMARY="📢 Pipeline DevSecOps Selesai!*\n\n"
+          STATUS_SUMMARY+="🔐 Secret Scanning (Gitleaks): $(emoji $SS_STATUS)\n"
+          STATUS_SUMMARY+="📦 SCA (Snyk): $(emoji $SCA_STATUS)\n"
+          STATUS_SUMMARY+="🔍 SAST (Semgrep): $(emoji $SAST_STATUS)\n"
+          STATUS_SUMMARY+="🧪 DAST (ZAP): $(emoji $DAST_STATUS)\n\n"
 
           if [[ "$SS_STATUS" == "success" && "$SCA_STATUS" == "success" && "$SAST_STATUS" == "success" && "$DAST_STATUS" == "success" ]]; then
             STATUS_SUMMARY+="📊 Status keseluruhan: 🟢 Berhasil%0A"
