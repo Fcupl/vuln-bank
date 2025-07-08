@@ -10,8 +10,10 @@ run_id = os.getenv("GITHUB_RUN_ID")
 message_body = sys.argv[1] if len(sys.argv) > 1 else "❌ Tidak ada status"
 
 message = (
-    f"*📢 Pipeline DevSecOps Selesai!*\n\n"
-    f"{message_body}\n\n"
+    "*📢 Pipeline DevSecOps Selesai!*\n"
+    "\n"
+    f"{message_body}\n"
+    "\n"
     f"[🔗 Lihat detail pipeline](https://github.com/{repo}/actions/runs/{run_id})"
 )
 
@@ -25,8 +27,7 @@ data = {
 
 response = requests.post(url, data=data)
 
-# Debugging
-print("BOT_TOKEN:", bot_token[:10] + "..." if bot_token else "❌ Not found")
+# Debug info
 print("CHAT_ID:", chat_id)
 print("RESPONSE:", response.status_code)
 print(response.text)
