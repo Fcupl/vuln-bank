@@ -28,3 +28,12 @@ data = {
 response = requests.post(url, data=data)
 print(f"Telegram response: {response.status_code}")
 print(response.text)
+print("======= DEBUG TELEGRAM SEND =======")
+print("BOT TOKEN:", bot_token[:10] + "..." if bot_token else "NOT FOUND")
+print("CHAT ID:", chat_id)
+print("Message content:")
+print(message)
+print("===================================")
+
+print(f"Telegram response: {response.status_code}")
+print(response.text)
