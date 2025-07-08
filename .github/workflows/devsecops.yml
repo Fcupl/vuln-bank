@@ -48,14 +48,14 @@ jobs:
           pip install -r requirements.txt
         
       - name: Run Snyk test
-        uses: snyk/actions/node@master
+        uses: snyk/actions/python@master
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
           command: test
 
       - name: Run Snyk monitor (optional)
-        uses: snyk/actions/node@master
+        uses: snyk/actions/python@master
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
