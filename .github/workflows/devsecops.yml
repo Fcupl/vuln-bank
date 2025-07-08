@@ -94,13 +94,13 @@ jobs:
           docker compose up -d
           docker ps
           sleep 15
-          curl -I http://localhost:8000 || true
+          curl -I http://localhost:8000 || (echo "Target tidak bisa diakses!" && exit 1)
 
       - name: Run ZAP Baseline Scan
         uses: zaproxy/action-baseline@v0.11.0
         with:
           target: 'http://localhost:8000'
-          cmd_options: '-t 300 -m 3 -r zap-report.html'
+          cmd_options: '-J report_json.json -w report_md.md -r zap-report.html -t 300 -m 3'
           artifact_name: zap-report.html
 
       - uses: actions/upload-artifact@v4
