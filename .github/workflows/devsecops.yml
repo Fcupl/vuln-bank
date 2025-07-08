@@ -104,21 +104,19 @@ jobs:
     if: always()
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-python@v5
         with:
           python-version: '3.10'
 
       - run: pip install requests
 
-      - name: Kirim ke Telegram
-        run: |
-          python3 .github/scripts/send_telegram.py
+      - name: Kirim Pesan Telegram
+        run: python3 .github/scripts/send_telegram.py
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-          SS_RESULT: ${{ needs.secret-scanning.outputs.result }}
-          SCA_RESULT: ${{ needs.sca.outputs.result }}
-          SAST_RESULT: ${{ needs.sast.outputs.result }}
-          DAST_RESULT: ${{ needs.dast.outputs.result }}
-          GITHUB_REPOSITORY: ${{ github.repository }}
-          GITHUB_RUN_ID: ${{ github.run_id }}
+          GITLEAKS_STATUS: ${{ needs.secret-scanning.result }}
+          SCA_FINDINGS: "2"    # Gantilah dengan hasil parsing actual
+          SAST_FINDINGS: "5"   # Gantilah dengan hasil parsing actual
+          DAST_FINDINGS: "14"  # Gantilah dengan hasil parsing actual
