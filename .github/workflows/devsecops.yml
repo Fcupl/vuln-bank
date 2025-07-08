@@ -108,7 +108,7 @@ jobs:
   report:
     name: 📩 Kirim Notifikasi Telegram
     runs-on: ubuntu-latest
-    needs: [report-status]
+    needs: [secret-scanning, sca, sast, dast]
     if: always()
     steps:
       - name: Checkout code
