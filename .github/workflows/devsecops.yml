@@ -85,9 +85,16 @@ jobs:
       - name: Run ZAP scan
         id: zap
         run: |
-          docker run --network=host -v $PWD:/zap/wrk ghcr.io/zaproxy/zaproxy:stable zap-baseline.py \
-            -t http://localhost:5000 -J zap-report.json || true
-          findings=$(jq '[.site[].alerts[] | select(.risk == "High" and .alert == "SQL Injection")] | length' zap-report.json)
+          mkdir zap_output
+          docker run --rm \
+            --user root \
+            --network=host \
+            -v $PWD/zap_output:/zap/wrk \
+            ghcr.io/zaproxy/zaproxy:stable zap-baseline.py \
+            -t http://localhost:5000 \
+            -J zap-report.json --auto || true
+
+          findings=$(jq '[.site[].alerts[] | select(.risk == "High")] | length' zap_output/zap-report.json)
           echo "findings=$findings" >> $GITHUB_OUTPUT
 
   report:
