@@ -31,27 +31,34 @@ jobs:
           path: gitleaks-report.json
 
   sca:
-    name: 📦 SCA (Syft + Grype)
+    name: 📦 SCA (Synk)
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Generate SBOM (Syft)
-        uses: anchore/sbom-action@v0.14.3
+      - name: Set up Node.js (adjust for language)
+        uses: actions/setup-node@v4
         with:
-          output-file: sbom.syft.json
+          node-version: 18
 
-      - name: Scan vulnerabilities (Grype)
-        uses: anchore/scan-action@v3
+      - name: Install dependencies
+        run: npm install
+        
+      - name: Run Snyk test
+        uses: snyk/actions/node@master
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
-          sbom: sbom.syft.json
+          command: test
 
-      - uses: actions/upload-artifact@v4
+      - name: Run Snyk monitor (optional)
+        uses: snyk/actions/node@master
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
-          name: grype-report
-          path: grype.sarif.json
-
+          command: monitor
+        
   sast:
     name: 🔍 SAST (Semgrep)
     runs-on: ubuntu-latest
