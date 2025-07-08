@@ -45,7 +45,7 @@ jobs:
       - name: Install dependencies
         run: |
           pip install --upgrade pip
-          pip install -r requirment.txt
+          pip install -r requirement.txt
         
       - name: Run Snyk test
         uses: snyk/actions/node@master
