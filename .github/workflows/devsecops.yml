@@ -22,7 +22,7 @@ jobs:
 
       - name: Run Gitleaks and generate report
         run: |
-          gitleaks detect --source . --report-format json --report-path gitleaks-report.json || true
+          gitleaks detect --source . --report-format json --report-path reports/gitleaks-report.json || true
 
       - name: Upload report
         uses: actions/upload-artifact@v4
@@ -92,14 +92,16 @@ jobs:
       - name: Start app (adjust for your case)
         run: |
           docker compose up -d
+          docker ps
           sleep 15
+          curl -I http://localhost:8000 || true
 
       - name: Run ZAP Baseline Scan
         uses: zaproxy/action-baseline@v0.11.0
         with:
           target: 'http://localhost:8000'
-          format: html
-          report: zap-report.html
+          cmd_options: '-t 300 -m 3 -r zap-report.html'
+          artifact_name: zap-report.html
 
       - uses: actions/upload-artifact@v4
         with:
