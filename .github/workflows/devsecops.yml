@@ -127,22 +127,3 @@ jobs:
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-      - name: Kirim Email
-        uses: matticusau/email-actions/send-email@v1
-        with:
-          server_address: smtp.gmail.com
-          server_port: 587
-          username: ${{ secrets.EMAIL_USERNAME }}
-          password: ${{ secrets.EMAIL_PASSWORD }}
-          subject: "📢 Laporan DevSecOps GitHub Actions"
-          body: |
-            Semua scan keamanan telah selesai:
-
-            ✅ Secret Scanning (Gitleaks)
-            ✅ SAST (Semgrep)
-            ✅ SCA (Snyk)
-            ✅ DAST (ZAP)
-
-            Silakan cek laporan lengkap di GitHub Actions artifacts.
-          to: orangjugakok@yahoo.com
-          from: "DevSecOps Bot <your-email@example.com>"
