@@ -10,131 +10,107 @@ jobs:
   secret-scanning:
     name: 🔐 Secret Scanning (Gitleaks)
     runs-on: ubuntu-latest
+    outputs:
+      result: ${{ steps.check.outputs.has_secret }}
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-      
+      - uses: actions/checkout@v4
+
       - name: Install Gitleaks
         run: |
           curl -sSL https://github.com/gitleaks/gitleaks/releases/latest/download/gitleaks-linux-amd64 -o gitleaks
           chmod +x gitleaks
           sudo mv gitleaks /usr/local/bin
 
-      - name: Run Gitleaks and generate report
+      - name: Run Gitleaks
+        id: check
         run: |
-          gitleaks detect --source . --report-format json --report-path reports/gitleaks-report.json || true
-
-      - name: Upload report
-        uses: actions/upload-artifact@v4
-        with:
-          name: gitleaks-report
-          path: gitleaks-report.json
+          gitleaks detect --source . --report-format json --report-path gitleaks-report.json || true
+          if grep -q '"Secret"' gitleaks-report.json; then
+            echo "has_secret=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_secret=false" >> $GITHUB_OUTPUT
+          fi
 
   sca:
-    name: 📦 SCA (Synk)
+    name: 📦 SCA (Snyk)
     runs-on: ubuntu-latest
+    outputs:
+      result: ${{ steps.snyk.outputs.findings }}
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: '3.10'
 
-      - name: Install dependencies
-        run: |
-          pip install --upgrade pip
-          pip install -r requirements.txt
-        
-      - name: Run Snyk test
-        uses: snyk/actions/python@master
-        env:
-          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-        with:
-          command: test
+      - run: pip install -r requirements.txt
 
-      - name: Run Snyk monitor (optional)
-        uses: snyk/actions/python@master
+      - name: Run Snyk test
+        id: snyk
+        run: |
+          snyk test --json > snyk-report.json || true
+          findings=$(jq '.vulnerabilities | map(select(.severity == "critical")) | length' snyk-report.json)
+          echo "findings=$findings" >> $GITHUB_OUTPUT
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-        with:
-          command: monitor
-        
+
   sast:
     name: 🔍 SAST (Semgrep)
     runs-on: ubuntu-latest
+    outputs:
+      result: ${{ steps.semgrep.outputs.findings }}
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: Run Semgrep
-        uses: returntocorp/semgrep-action@v1
-        with:
-          config: p/default
-          args: --sarif -o semgrep.sarif
-
-      - name: Upload SARIF report
-        uses: actions/upload-artifact@v4
-        with:
-          name: semgrep-report
-          path: semgrep.sarif
+        id: semgrep
+        run: |
+          semgrep --config=p/default --json > semgrep-report.json || true
+          findings=$(jq '[.results[] | select(.extra.severity == "HIGH")] | length' semgrep-report.json)
+          echo "findings=$findings" >> $GITHUB_OUTPUT
 
   dast:
     name: 🧪 DAST (OWASP ZAP)
     runs-on: ubuntu-latest
-    needs: [secret-scanning, sca, sast]
-    if: always()
+    outputs:
+      result: ${{ steps.zap.outputs.findings }}
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Start app (adjust for your case)
+      - name: Start app
         run: |
-          docker compose up -d
-          docker ps
-          sleep 15
-          curl -I http://localhost:5000 || (echo "Target tidak bisa diakses!" && exit 1)
+          docker-compose up -d
+          sleep 10
+          curl -sSf http://localhost:5000 || exit 1
 
-      - name: Run ZAP Baseline Scan
-        uses: zaproxy/action-baseline@v0.11.0
-        with:
-          target: 'http://localhost:5000'
-          cmd_options: '-r zap-report.html -w zap-report.md -J zap-report.json'
-          artifact_name: zap-report
-
-      - name: Upload HTML Report
-        uses: actions/upload-artifact@v4
-        with:
-          name: zap-report-html
-          path: zap-report.html
+      - name: Run ZAP scan
+        id: zap
+        run: |
+          docker run --network=host -v $PWD:/zap/wrk ghcr.io/zaproxy/zaproxy:stable zap-baseline.py \
+            -t http://localhost:5000 -J zap-report.json || true
+          findings=$(jq '[.site[].alerts[] | select(.risk == "High" and .alert == "SQL Injection")] | length' zap-report.json)
+          echo "findings=$findings" >> $GITHUB_OUTPUT
 
   report:
     name: 📩 Kirim Notifikasi Telegram
     runs-on: ubuntu-latest
     needs: [secret-scanning, sca, sast, dast]
-    if: always()
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Unduh artifacts
-        uses: actions/download-artifact@v4
-        with:
-          path: artifacts/
-
-      - name: Setup Python
-        uses: actions/setup-python@v5
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: '3.10'
 
-      - name: Install dependencies
-        run: pip install requests
+      - run: pip install requests
 
-      - name: Kirim Notifikasi
-        run: python3 .github/scripts/send_telegram.py
+      - name: Kirim ke Telegram
+        run: |
+          python3 .github/scripts/send_telegram.py
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          SS_RESULT: ${{ needs.secret-scanning.outputs.result }}
+          SCA_RESULT: ${{ needs.sca.outputs.result }}
+          SAST_RESULT: ${{ needs.sast.outputs.result }}
+          DAST_RESULT: ${{ needs.dast.outputs.result }}
           GITHUB_REPOSITORY: ${{ github.repository }}
           GITHUB_RUN_ID: ${{ github.run_id }}
