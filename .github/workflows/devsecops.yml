@@ -78,7 +78,7 @@ jobs:
 
       - name: Start app
         run: |
-          docker-compose up -d
+          docker compose up -d
           sleep 10
           curl -sSf http://localhost:5000 || exit 1
 
