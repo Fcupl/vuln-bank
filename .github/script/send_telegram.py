@@ -1,33 +1,30 @@
 import os
 import requests
+import sys
 
-BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN")
-CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID")
+status = sys.argv[1] if len(sys.argv) > 1 else "❓ Status tidak diketahui"
+bot_token = os.getenv('TELEGRAM_BOT_TOKEN')
+chat_id = os.getenv('TELEGRAM_CHAT_ID')
 
-# Pesan yang akan dikirim
-message = """
-🚨 *DevSecOps Alert - vuln-bank*
+message = f"""
+📢 *Laporan DevSecOps*
 
-🔐 Secret Scanning: ✅
-📦 SCA (Library check): ✅
-🔍 SAST (Code analysis): ✅
-🧪 DAST (Runtime test): ✅
+Status pipeline: {status}
 
-Silakan cek hasil lengkap di CI/CD pipeline.
+🔍 Secret Scan (Gitleaks)
+🧠 SAST (Semgrep)
+📦 SCA (Snyk)
+🧪 DAST (ZAP)
+
+Cek GitHub Actions untuk detail lengkap.
 """
 
-def send_telegram_message(token, chat_id, message):
-    url = f"https://api.telegram.org/bot{token}/sendMessage"
-    payload = {
-        "chat_id": chat_id,
-        "text": message,
-        "parse_mode": "Markdown"
-    }
-    response = requests.post(url, data=payload)
-    if response.status_code == 200:
-        print("Pesan Telegram berhasil dikirim.")
-    else:
-        print("Gagal kirim Telegram:", response.text)
+url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
+payload = {
+    'chat_id': chat_id,
+    'text': message,
+    'parse_mode': 'Markdown'
+}
 
-if __name__ == "__main__":
-    if not BOT
+r = requests.post(url, data=payload)
+print(r.status_code, r.text)
