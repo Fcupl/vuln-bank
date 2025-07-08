@@ -115,40 +115,26 @@ jobs:
     needs: [secret-scanning, sca, sast, dast]
     if: always()
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - uses: actions/setup-python@v5
+      - name: Unduh artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts/
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
         with:
           python-version: '3.10'
 
-      - run: pip install requests
+      - name: Install dependencies
+        run: pip install requests
 
-      - name: Bangun Pesan Status
-        run: |
-          SS_STATUS="${{ needs.secret-scanning.result }}"
-          SCA_STATUS="${{ needs.sca.result }}"
-          SAST_STATUS="${{ needs.sast.result }}"
-          DAST_STATUS="${{ needs.dast.result }}"
-
-          emoji() {
-            if [ "$1" == "success" ]; then echo "✅"; else echo "❌"; fi
-          }
-
-          overall_status="🔴 *GAGAL*"
-          if [[ "$SS_STATUS" == "success" && "$SCA_STATUS" == "success" && "$SAST_STATUS" == "success" && "$DAST_STATUS" == "success" ]]; then
-            overall_status="🟢 *Berhasil*"
-          fi
-
-          echo "🔐 Secret Scanning (Gitleaks): $(emoji $SS_STATUS)" > message.txt
-          echo "📆 SCA (Snyk): $(emoji $SCA_STATUS)" >> message.txt
-          echo "🔍 SAST (Semgrep): $(emoji $SAST_STATUS)" >> message.txt
-          echo "🧪 DAST (ZAP): $(emoji $DAST_STATUS)" >> message.txt
-          echo "" >> message.txt
-          echo "📊 Status keseluruhan: $overall_status" >> message.txt
-
-      - name: Kirim Telegram
-        run: |
-          python3 .github/scripts/send_telegram.py "$(cat message.txt)"
+      - name: Kirim Notifikasi
+        run: python3 .github/scripts/send_telegram.py
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          GITHUB_RUN_ID: ${{ github.run_id }}
