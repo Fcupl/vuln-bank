@@ -91,7 +91,7 @@ jobs:
 
       - name: Start app (adjust for your case)
         run: |
-          docker-compose up -d
+          docker compose up -d
           sleep 15
 
       - name: Run ZAP Baseline Scan
