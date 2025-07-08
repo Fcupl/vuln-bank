@@ -25,9 +25,6 @@ data = {
     "disable_web_page_preview": True
 }
 
-response = requests.post(url, data=data)
-print(f"Telegram response: {response.status_code}")
-print(response.text)
 print("======= DEBUG TELEGRAM SEND =======")
 print("BOT TOKEN:", bot_token[:10] + "..." if bot_token else "NOT FOUND")
 print("CHAT ID:", chat_id)
@@ -35,5 +32,7 @@ print("Message content:")
 print(message)
 print("===================================")
 
-print(f"Telegram response: {response.status_code}")
-print(response.text)
+response = requests.post(url, data=data)
+
+print("RESPONSE STATUS:", response.status_code)
+print("RESPONSE BODY:", response.text)
