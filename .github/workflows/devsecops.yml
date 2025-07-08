@@ -112,47 +112,32 @@ jobs:
     needs: [secret-scanning, sca, sast, dast]
     if: always()
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Python
-        uses: actions/setup-python@v5
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: '3.10'
-
-      - name: Install requests
-        run: pip install requests
-
-      - name: Kirim Notifikasi ke Telegram
+      - run: pip install requests
+      - name: Bangun dan kirim pesan
         run: |
           SS_STATUS="${{ needs.secret-scanning.result }}"
           SCA_STATUS="${{ needs.sca.result }}"
           SAST_STATUS="${{ needs.sast.result }}"
           DAST_STATUS="${{ needs.dast.result }}"
 
-          # Konversi ke emoji
           emoji() {
             if [ "$1" == "success" ]; then echo "✅"; else echo "❌"; fi
           }
 
-          STATUS_SUMMARY="📢 *Pipeline DevSecOps Selesai!*\n\n"
-          STATUS_SUMMARY+="🔐 Secret Scanning (Gitleaks): $(emoji $SS_STATUS)\n"
-          STATUS_SUMMARY+="📦 SCA (Snyk): $(emoji $SCA_STATUS)\n"
-          STATUS_SUMMARY+="🔍 SAST (Semgrep): $(emoji $SAST_STATUS)\n"
-          STATUS_SUMMARY+="🧪 DAST (ZAP): $(emoji $DAST_STATUS)\n\n"
+          cat <<EOF > message.txt
+🔐 Secret Scanning (Gitleaks): $(emoji $SS_STATUS)
+📦 SCA (Snyk): $(emoji $SCA_STATUS)
+🔍 SAST (Semgrep): $(emoji $SAST_STATUS)
+🧪 DAST (ZAP): $(emoji $DAST_STATUS)
 
-          if [[ "$SS_STATUS" == "success" && "$SCA_STATUS" == "success" && "$SAST_STATUS" == "success" && "$DAST_STATUS" == "success" ]]; then
-            STATUS_SUMMARY+="📊 Status keseluruhan: 🟢 *Berhasil*\n\n"
-          else
-            STATUS_SUMMARY+="📊 Status keseluruhan: 🔴 *GAGAL*\n\n"
-          fi
-
-          STATUS_SUMMARY+="🔗 https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-
-          echo "$STATUS_SUMMARY" > message.txt
+📊 Status keseluruhan: $(if [[ "$SS_STATUS" == "success" && "$SCA_STATUS" == "success" && "$SAST_STATUS" == "success" && "$DAST_STATUS" == "success" ]]; then echo "🟢 *Berhasil*"; else echo "🔴 *GAGAL*"; fi)
+EOF
 
           python3 .github/scripts/send_telegram.py "$(cat message.txt)"
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-##
