@@ -105,9 +105,10 @@ jobs:
           path: zap-report.html
 
   report:
-    name: 📩 Notifikasi Telegram
+    name: 📩 Kirim Notifikasi Telegram
     runs-on: ubuntu-latest
-    needs: [secret-scanning, sca, sast, dast]
+    needs: [report-status]
+    if: always()
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -117,11 +118,11 @@ jobs:
         with:
           python-version: '3.10'
 
-      - name: Install Python dependencies
+      - name: Install dependencies
         run: pip install requests
 
-      - name: Send Telegram Message
-        run: python3 .github/scripts/send_telegram.py
+      - name: Kirim Telegram
+        run: python3 .github/scripts/send_telegram.py "${{ needs.report-status.outputs.result }}"
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
