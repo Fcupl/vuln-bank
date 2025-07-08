@@ -72,9 +72,10 @@ jobs:
         uses: returntocorp/semgrep-action@v1
         with:
           config: p/default
-          generateSarif: true
+          args: --sarif -o semgrep.sarif
 
-      - uses: actions/upload-artifact@v4
+      - name: Upload SARIF report
+        uses: actions/upload-artifact@v4
         with:
           name: semgrep-report
           path: semgrep.sarif
