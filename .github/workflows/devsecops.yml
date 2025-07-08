@@ -125,14 +125,33 @@ jobs:
 
       - name: Kirim Notifikasi ke Telegram
         run: |
-          STATUS="🟢 Berhasil"
-          if [[ "${{ needs.secret-scanning.result }}" == "failure" ]] || \
-             [[ "${{ needs.sca.result }}" == "failure" ]] || \
-             [[ "${{ needs.sast.result }}" == "failure" ]] || \
-             [[ "${{ needs.dast.result }}" == "failure" ]]; then
-            STATUS="🔴 GAGAL!"
+          SS_STATUS="${{ needs.secret-scanning.result }}"
+          SCA_STATUS="${{ needs.sca.result }}"
+          SAST_STATUS="${{ needs.sast.result }}"
+          DAST_STATUS="${{ needs.dast.result }}"
+
+          # Konversi ke emoji
+          emoji() {
+            if [ "$1" == "success" ]; then echo "✅"; else echo "❌"; fi
+          }
+
+          STATUS_SUMMARY="📢 Pipeline DevSecOps Selesai%0A%0A"
+          STATUS_SUMMARY+="🔐 Secret Scanning (Gitleaks): $(emoji $SS_STATUS)%0A"
+          STATUS_SUMMARY+="📦 SCA (Snyk): $(emoji $SCA_STATUS)%0A"
+          STATUS_SUMMARY+="🔍 SAST (Semgrep): $(emoji $SAST_STATUS)%0A"
+          STATUS_SUMMARY+="🧪 DAST (ZAP): $(emoji $DAST_STATUS)%0A%0A"
+
+          if [[ "$SS_STATUS" == "success" && "$SCA_STATUS" == "success" && "$SAST_STATUS" == "success" && "$DAST_STATUS" == "success" ]]; then
+            STATUS_SUMMARY+="📊 Status keseluruhan: 🟢 Berhasil%0A"
+          else
+            STATUS_SUMMARY+="📊 Status keseluruhan: 🔴 GAGAL%0A"
           fi
-          python3 .github/scripts/send_telegram.py "$STATUS"
+
+          STATUS_SUMMARY+="🔗 https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+
+          echo "$STATUS_SUMMARY" > message.txt
+
+          python3 .github/scripts/send_telegram.py "$(cat message.txt)"
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
