@@ -11,13 +11,13 @@ run_id = os.getenv("GITHUB_RUN_ID") ##
 
 message = f"""
 🚨 *Pipeline DevSecOps Selesai!*
-
+{message}
 📦 Secret Scanning (Gitleaks)
 🔍 SAST (Semgrep)
 📦 SCA (Snyk)
 🧪 DAST (ZAP)
 
-📊 Status: *{status_summary}*
+📊 Status: *{message}*
 🔗 [Lihat detail pipeline](https://github.com/{repo}/actions/runs/{run_id})
 """
 
