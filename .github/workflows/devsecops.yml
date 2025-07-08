@@ -37,13 +37,15 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up Node.js (adjust for language)
-        uses: actions/setup-node@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
-          node-version: 18
+          python-version: '3.10'
 
       - name: Install dependencies
-        run: npm install
+        run: |
+          pip install --upgrade pip
+          pip install -r requirment.txt
         
       - name: Run Snyk test
         uses: snyk/actions/node@master
