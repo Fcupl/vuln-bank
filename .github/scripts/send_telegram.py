@@ -21,14 +21,3 @@ message = f"""
 🔗 [Lihat detail pipeline](https://github.com/{repo}/actions/runs/{run_id})
 """
 
-url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
-data = {
-    "chat_id": chat_id,
-    "text": message,
-    "parse_mode": "Markdown",
-    "disable_web_page_preview": True
-}
-
-response = requests.post(url, data=data)
-print(f"Telegram response: {response.status_code}")
-
