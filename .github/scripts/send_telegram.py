@@ -2,54 +2,51 @@ import os
 import requests
 from datetime import datetime
 
-# Fungsi bantu emoji ✅❌
-def icon(condition, text_ok, text_fail=None):
-    if condition:
-        return f"✅ {text_ok}"
+# Ambil variabel dari lingkungan
+bot_token = os.getenv("TELEGRAM_BOT_TOKEN")
+chat_id = os.getenv("TELEGRAM_CHAT_ID")
+
+# Temuan dari env atau fallback teks default
+secret_status = os.getenv("GITLEAKS_STATUS", "Unknown")
+sca_issues = os.getenv("SCA_FINDINGS", "Unknown")
+sast_issues = os.getenv("SAST_FINDINGS", "Unknown")
+dast_issues = os.getenv("DAST_FINDINGS", "Unknown")
+
+repo = os.getenv("GITHUB_REPOSITORY", "Unknown")
+run_id = os.getenv("GITHUB_RUN_ID", "")
+pipeline_url = f"https://github.com/{repo}/actions/runs/{run_id}"
+
+# Format waktu lokal (WIB)
+now = datetime.utcnow()
+time_wib = now.replace(hour=(now.hour + 7) % 24)
+wib_str = time_wib.strftime("%Y-%m-%d %H:%M WIB")
+
+# Ubah status ke emoji atau deskripsi
+def status_line(label, value):
+    if value in ["0", "success", "✅"]:
+        return f"✅ {label}: Clean"
+    elif value.lower() == "unknown":
+        return f"⚠️ {label}: Unknown"
     else:
-        return f"❌ {text_fail or text_ok}"
+        return f"❌ {label}: {value}"
 
-def safe_int(val):
-    try:
-        return int(val)
-    except:
-        return -1
-
-# Ambil data dari environment variables
-sca_result = os.getenv("SCA_FINDINGS", "")
-sast_result = os.getenv("SAST_FINDINGS", "")
-dast_result = os.getenv("DAST_FINDINGS", "")
-gitleaks_result = os.getenv("GITLEAKS_STATUS", "")
-
-repo = os.getenv("GITHUB_REPOSITORY", "Unknown Repo")
-runtime = datetime.now().strftime("%Y-%m-%d %H:%M WIB")
-run_url = f"https://github.com/{repo}/actions/runs/{os.getenv('GITHUB_RUN_ID', '')}"
-
-# Konversi hasil masing-masing
-sca_status = icon(safe_int(sca_result) == 0, "SCA: Clean", f"SCA: {sca_result} Critical Dependencies")
-sast_status = icon(safe_int(sast_result) == 0, "SAST: Clean", f"SAST: {sast_result} High Findings")
-dast_status = icon(safe_int(dast_result) == 0, "DAST: Clean", f"DAST: {dast_result} Warnings")
-gitleaks_status = icon(gitleaks_result == "success", "Secret Scan: Clean", "Secret Scan: Findings Detected")
-
-# Bangun pesan Telegram
+# Susun pesan
 message = f"""
 🚨 *DevSecOps Pipeline Report* 🚨
 
-{gitleaks_status}  
-{sca_status}  
-{sast_status}  
-{dast_status}
+{status_line("Secret Scan", secret_status)}
+{status_line("SCA", sca_issues + " Critical Dependencies")}
+{status_line("SAST", sast_issues + " High Findings")}
+{status_line("DAST", dast_issues + " Warnings")}
 
-🔗 *Repo:* `{repo}`  
-🕐 *Time:* {runtime}  
-🔗 [Lihat detail pipeline]({run_url})
+🔗 *Repo*: {repo}  
+🕐 *Time*: {wib_str}  
+🔗 [Lihat detail pipeline]({pipeline_url})
 
-Mohon segera ditindaklanjuti!
+*Mohon segera ditindaklanjuti!*
 """
 
 # Kirim ke Telegram
-bot_token = os.getenv("TELEGRAM_BOT_TOKEN")
-chat_id = os.getenv("TELEGRAM_CHAT_ID")
 url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
 data = {
     "chat_id": chat_id,
@@ -59,4 +56,4 @@ data = {
 }
 
 response = requests.post(url, data=data)
-print(f"Telegram response: {response.status_code} {response.text}")
+print(f"Telegram response: {response.status_code} - {response.text}")
