@@ -117,6 +117,6 @@ jobs:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           GITLEAKS_STATUS: ${{ needs.secret-scanning.result }}
-          SCA_FINDINGS: "2"    # Gantilah dengan hasil parsing actual
-          SAST_FINDINGS: "5"   # Gantilah dengan hasil parsing actual
-          DAST_FINDINGS: "14"  # Gantilah dengan hasil parsing actual
+          SCA_FINDINGS: "2"    
+          SAST_FINDINGS: "5"   
+          DAST_FINDINGS: "14" 
