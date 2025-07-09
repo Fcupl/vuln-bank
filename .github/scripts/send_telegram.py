@@ -2,11 +2,11 @@ import os
 import requests
 from datetime import datetime
 
-# Ambil variabel dari lingkungan
+
 bot_token = os.getenv("TELEGRAM_BOT_TOKEN")
 chat_id = os.getenv("TELEGRAM_CHAT_ID")
 
-# Temuan dari env atau fallback teks default
+
 secret_status = os.getenv("GITLEAKS_STATUS", "Unknown")
 sca_issues = os.getenv("SCA_FINDINGS", "Unknown")
 sast_issues = os.getenv("SAST_FINDINGS", "Unknown")
@@ -16,12 +16,12 @@ repo = os.getenv("GITHUB_REPOSITORY", "Unknown")
 run_id = os.getenv("GITHUB_RUN_ID", "")
 pipeline_url = f"https://github.com/{repo}/actions/runs/{run_id}"
 
-# Format waktu lokal (WIB)
+
 now = datetime.utcnow()
 time_wib = now.replace(hour=(now.hour + 7) % 24)
 wib_str = time_wib.strftime("%Y-%m-%d %H:%M WIB")
 
-# Ubah status ke emoji atau deskripsi
+
 def status_line(label, value):
     if value in ["0", "success", "✅"]:
         return f"✅ {label}: Clean"
@@ -30,7 +30,7 @@ def status_line(label, value):
     else:
         return f"❌ {label}: {value}"
 
-# Susun pesan
+
 message = f"""
 🚨 *DevSecOps Pipeline Report* 🚨
 
@@ -46,7 +46,7 @@ message = f"""
 *Mohon segera ditindaklanjuti!*
 """
 
-# Kirim ke Telegram
+
 url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
 data = {
     "chat_id": chat_id,
